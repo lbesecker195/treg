@@ -1212,3 +1212,31 @@ async def test_search_caps_a_routed_group_at_a_few_children(clients: AsyncClient
     kids = [r for r in rows if r["capability"] == "people.search" and r.get("kind") != "routed"]
     assert len(kids) <= 5 and parent["children_hidden"] >= 1
     assert "treg.people.email.find" in {r["id"] for r in rows}, "the next job fits on the page now"
+
+
+def test_lusha_decision_makers_is_a_tombstone_pointing_at_buying_group():
+    """Lusha removed POST /v3/contacts/decision-makers on 2026-08-12 (changelog 2.9.0); the legacy
+    handler still answered companies-only bodies but rejected `contactsLimit`, so the documented
+    spend cap never applied. The id stays as a tombstone with its story; the successor is the only
+    operation that honours the cap and is the row an agent may now discover and spend against."""
+    cat = cs.load()
+    retired, successor = "lusha.x.decision-makers", "lusha.x.buying-group"
+    old, new = cat.by_id[retired], cat.by_id[successor]
+    assert old["status"] == "retired"
+    assert old["superseded_by"] == successor
+    assert "contactsLimit" in old["status_note"] and "2026-08-12" in old["status_note"]
+    assert retired not in {ep["id"] for ep in cat.endpoints}
+    assert not cat.platform_eligible(old), "a tombstone is never an offer"
+
+    assert not new.get("status")
+    assert new["path"] == "/v3/contacts/buying-group" and new["method"] == "POST"
+    assert new["capability"] == old["capability"] == "people.decision_makers"
+    assert new["cost"]["type"] == "per_result" and new["cost"]["value"] == 1
+    assert new["cost"]["currency"] == "credit"
+    assert new["test_request"]["body"] == {"companies": [{"domain": "lusha.com"}], "contactsLimit": 1}
+    assert new["input"]["body"]["contactsLimit"]["type"] == "integer"
+    assert "60" in new["input"]["note"] and "contactsLimit" in new["input"]["note"]
+    assert not new.get("verified") and not new.get("example_response"), "no live probe was run"
+    assert cat.platform_eligible(new), "the successor must stay servable on treg's key"
+    live = {ep["id"] for ep in cat.endpoints if ep.get("capability") == "people.decision_makers"}
+    assert successor in live and retired not in live
