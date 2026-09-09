@@ -380,8 +380,7 @@ _PLATFORM_PAGE_DEFAULT = 20
 _PLATFORM_PAGE_MAX = 100
 _LIMIT_PARAMS = ("limit", "count", "depth", "page_size", "per_page", "num", "max_results", "size",
                  "pageSize", "perPage", "numResults", "maxResults",
-                 "contactsLimit")  # camelCase: companyenrich, exa, lusha; contactsLimit: lusha buying-group
-                 "contactsLimit",  # camelCase: companyenrich, exa, lusha; contactsLimit: lusha decision-makers
+                 "contactsLimit",  # camelCase: companyenrich, exa, lusha; contactsLimit: lusha buying-group
                  # apify: `maxItems` rides the query (the platform cap) AND the actor input body
                  # (the actor's own per-query cap); `resultsLimit` is the Facebook actor's input.
                  # Neither was read, so every run reserved the 20-row page and, with nothing to

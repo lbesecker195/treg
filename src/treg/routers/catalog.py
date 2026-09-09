@@ -380,7 +380,6 @@ async def catalog_endpoint(
         "call_template": catalog_store.call_template(ep),
         "example_response": example,
         "hints": [_run_hint(ep)]
-        "hints": [f"{catalog_store.call_template(ep)}   # run it — key injected server-side"]
                  + ([f"when treg's own {ep['provider']} account is out this may be served through the "
                      f"overflow relay ({overflow['overflow_via']}) and bill "
                      f"${overflow['overflow_price_usd']:g} per {overflow['overflow_price_unit']} instead "
